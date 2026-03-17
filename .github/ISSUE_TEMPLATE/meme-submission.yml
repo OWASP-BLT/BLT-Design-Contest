@@ -59,7 +59,7 @@ body:
     attributes:
       label: Submission Agreement
       description: >
-        Show your support for this design by reacting with a 👍 thumbs up!
+        Please confirm the following before submitting.
       options:
         - label: >
             I confirm this is my original work and I grant OWASP BLT
