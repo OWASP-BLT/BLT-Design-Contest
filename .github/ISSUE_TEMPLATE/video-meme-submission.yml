@@ -26,7 +26,7 @@ body:
   - type: input
     id: design_url
     attributes:
-      label: Video Meme Link
+      label: Design URL
       description: >
         Link to your video meme (YouTube, Loom, Drive, or other public link).
       placeholder: "https://..."
