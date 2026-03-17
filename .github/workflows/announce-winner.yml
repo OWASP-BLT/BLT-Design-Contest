@@ -36,7 +36,7 @@ jobs:
               'blt-tshirt':   'DonnieBLT',
               'blt-logo':     'DonnieBLT',
               'blt-homepage': 'DonnieBLT',
-              'blt-meme':     'DonnieBLT',
+              'blt-video-meme':     'DonnieBLT',
             };
 
             const body = context.payload.issue.body || '';
@@ -129,7 +129,7 @@ jobs:
               'blt-tshirt':   'DonnieBLT',
               'blt-logo':     'DonnieBLT',
               'blt-homepage': 'DonnieBLT',
-              'blt-meme':     'DonnieBLT',
+              'blt-video-meme':     'DonnieBLT',
             };
 
             let authorizedApprover = 'DonnieBLT'; // default fallback

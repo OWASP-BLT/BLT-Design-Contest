@@ -1,13 +1,13 @@
-name: BLT Meme Submission
-description: Submit your meme video entry for the BLT Meme contest
-title: "[Meme] "
-labels: ["meme-submission"]
+name: BLT Video Meme Submission
+description: Submit your video meme entry for the BLT Video Meme contest
+title: "[Video Meme] "
+labels: ["video-meme-submission"]
 body:
   - type: markdown
     attributes:
       value: |
-        ## 🎬 BLT Meme Contest Submission
-        Thank you for submitting your meme video for OWASP BLT.
+        ## 🎬 BLT Video Meme Contest Submission
+        Thank you for submitting your video meme for OWASP BLT.
         Please fill out all fields below.
         Your submission will appear on the [Design Showcase](https://owasp-blt.github.io/BLT-Design-Contest/) once approved.
 
@@ -16,7 +16,7 @@ body:
     attributes:
       label: Preview Image
       description: >
-        Upload a preview thumbnail, screenshot, or GIF from your meme video by
+        Upload a preview thumbnail, screenshot, or GIF from your video meme by
         dragging and dropping it here, pasting it, or clicking the attachment button.
         GitHub will host the uploaded media automatically.
       placeholder: "Drag & drop or paste your preview here…"
@@ -26,9 +26,9 @@ body:
   - type: input
     id: design_url
     attributes:
-      label: Meme Video Link
+      label: Video Meme Link
       description: >
-        Link to your meme video (YouTube, Loom, Drive, or other public link).
+        Link to your video meme (YouTube, Loom, Drive, or other public link).
       placeholder: "https://..."
     validations:
       required: true
@@ -48,8 +48,8 @@ body:
     attributes:
       label: Description
       description: >
-        Describe your meme concept and how it represents OWASP BLT.
-      placeholder: "My meme video shows..."
+        Describe your video meme concept and how it represents OWASP BLT.
+      placeholder: "My video meme shows..."
       render: markdown
     validations:
       required: true
