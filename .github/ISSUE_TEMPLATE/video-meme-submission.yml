@@ -36,10 +36,12 @@ body:
   - type: dropdown
     id: category
     attributes:
-      label: Design Category
+      label: Video Meme Category
       options:
-        - Banner / Marketing
-        - Other
+        - Promotional
+        - Educational
+        - Humorous
+        - Explainer
     validations:
       required: true
 
