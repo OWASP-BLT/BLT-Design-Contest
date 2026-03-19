@@ -6,8 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="description" content="BLT Homepage Design — community showcase of design submissions. Rate your favourites with a thumbs up!" />
-  <title>BLT Homepage Design — BLT Design Contests</title>
+  <meta name="description" content="BLT Video Meme — community showcase of design submissions. Rate your favourites with a thumbs up!" />
+  <title>BLT Video Meme — BLT Design Contests</title>
 
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -44,7 +44,7 @@
              flex flex-col font-sans antialiased">
 
   <!-- ── Skip to content ── -->
-  <a href="#contest-blt-homepage"
+  <a href="#contest-blt-video-meme"
      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2
             focus:z-50 focus:px-4 focus:py-2 focus:bg-[#E10101] focus:text-white
             focus:rounded-md focus:font-medium">
@@ -77,17 +77,17 @@
           </a>
           <span class="text-gray-300 dark:text-gray-600">|</span>
           <span class="inline-flex items-center gap-1.5 text-[#E10101] font-semibold">
-            <i class="fa-solid fa-house" aria-hidden="true"></i> BLT Homepage Design
+            <i class="fa-solid fa-circle-play" aria-hidden="true"></i> BLT Video Meme
           </span>
-            <a href="https://github.com/OWASP-BLT/BLT-Design-Contest" target="_blank" rel="noopener"
+          <a href="https://github.com/OWASP-BLT/BLT-Design-Contest" target="_blank" rel="noopener"
              class="text-gray-600 dark:text-gray-300 hover:text-[#E10101] transition-colors
-              inline-flex items-center gap-1">
+                    inline-flex items-center gap-1">
             <i class="fa-brands fa-github" aria-hidden="true"></i> GitHub
           </a>
         </div>
 
         <!-- CTA -->
-        <a href="https://github.com/OWASP-BLT/BLT-Design-Contest/issues/new?template=homepage-submission.yml"
+        <a href="https://github.com/OWASP-BLT/BLT-Design-Contest/issues/new?template=video-meme-submission.yml"
            target="_blank" rel="noopener"
            class="inline-flex items-center gap-2 bg-[#E10101] hover:bg-red-700
                   text-white text-sm font-semibold px-4 py-2 rounded-md
@@ -117,25 +117,25 @@
 
       <!-- Last updated note -->
       <p class="text-xs text-gray-400 dark:text-gray-500 mb-4 text-right">
-        Last updated 19 Mar 2026 16:16 UTC
+        Last updated 17 Mar 2026 18:13 UTC
       </p>
 
       
       
-    <div id="contest-blt-homepage" class="contest-panel" role="tabpanel" aria-labelledby="tab-blt-homepage">
+    <section id="contest-blt-video-meme" class="contest-panel" aria-labelledby="contest-blt-video-meme-title">
 
       <!-- Contest info bar -->
       <div class="mb-6 p-5 bg-white dark:bg-[#1F2937] rounded-xl border border-[#E5E5E5] dark:border-gray-700">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <i class="fa-solid fa-house text-[#E10101]" aria-hidden="true"></i>
-              BLT Homepage Design
+            <h2 id="contest-blt-video-meme-title" class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <i class="fa-solid fa-circle-play text-[#E10101]" aria-hidden="true"></i>
+              BLT Video Meme
             </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Design the new homepage for the OWASP BLT website.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Design a video meme for OWASP BLT.</p>
             <div class="mt-2 flex items-center gap-4 text-sm font-medium flex-wrap">
               <span class="inline-flex items-center gap-1 text-[#E10101]">
-                <i class="fa-solid fa-trophy" aria-hidden="true"></i> $25 prize
+                <i class="fa-solid fa-trophy" aria-hidden="true"></i> $10 prize
               </span>
               <span class="inline-flex items-center gap-1 text-[#E10101]">
                 <i class="fa-solid fa-calendar-day" aria-hidden="true"></i> Ends April 15, 2026
@@ -146,7 +146,7 @@
               </span>
             </div>
           </div>
-          <a href="https://github.com/OWASP-BLT/BLT-Design-Contest/issues/new?template=homepage-submission.yml"
+           <a href="https://github.com/OWASP-BLT/BLT-Design-Contest/issues/new?template=video-meme-submission.yml"
              target="_blank" rel="noopener"
              class="inline-flex items-center gap-2 bg-[#E10101] hover:bg-red-700
                     text-white text-sm font-semibold px-4 py-2 rounded-md
@@ -160,33 +160,33 @@
       <!-- Sort controls -->
       <div class="flex items-center gap-3 flex-wrap mb-6">
         <span class="text-sm text-gray-500 dark:text-gray-400 mr-1">Sort:</span>
-        <button id="sort-thumbs-blt-homepage" type="button"
+        <button id="sort-thumbs-blt-video-meme" type="button"
                 class="inline-flex items-center gap-2 border border-gray-300 dark:border-gray-600
                        text-gray-700 dark:text-gray-200 hover:border-[#E10101] hover:text-[#E10101]
                        text-sm font-semibold px-4 py-2 rounded-md transition-colors"
                 aria-pressed="false"
-                data-sort="thumbs" data-contest="blt-homepage">
+                data-sort="thumbs" data-contest="blt-video-meme">
           <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
           By 👍
         </button>
-        <button id="sort-reactions-blt-homepage" type="button"
+        <button id="sort-reactions-blt-video-meme" type="button"
                 class="inline-flex items-center gap-2 border border-gray-300 dark:border-gray-600
                        text-gray-700 dark:text-gray-200 hover:border-[#E10101] hover:text-[#E10101]
                        text-sm font-semibold px-4 py-2 rounded-md transition-colors"
                 aria-pressed="false"
-                data-sort="reactions" data-contest="blt-homepage">
+                data-sort="reactions" data-contest="blt-video-meme">
           <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
           By all reactions
         </button>
       </div>
 
       <!-- Cards grid -->
-      <div id="cards-grid-blt-homepage"
+      <div id="cards-grid-blt-video-meme"
            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="col-span-full text-center py-20 text-gray-500 dark:text-gray-400"><i class="fa-solid fa-house text-5xl mb-4 block text-[#E10101]" aria-hidden="true"></i><p class="text-lg font-medium">No submissions yet — be the first!</p><p class="mt-2 text-sm">Click <strong>Add Entry</strong> to get started.</p></div>
+        <div class="col-span-full text-center py-20 text-gray-500 dark:text-gray-400"><i class="fa-solid fa-circle-play text-5xl mb-4 block text-[#E10101]" aria-hidden="true"></i><p class="text-lg font-medium">No submissions yet — be the first!</p><p class="mt-2 text-sm">Click <strong>Add Entry</strong> to get started.</p></div>
       </div>
 
-    </div>
+    </section>
 
     </div>
   </main>
