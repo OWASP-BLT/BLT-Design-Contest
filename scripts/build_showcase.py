@@ -75,6 +75,20 @@ CONTESTS = [
         "deadline_display": "April 15, 2026",
         "icon": "fa-solid fa-house",
     },
+    # BLT Video Meme contest — based on original work by @ananya-09
+    # (https://github.com/OWASP-BLT/BLT-Design-Contest/pull/95)
+    {
+        "id": "blt-video-meme",
+        "name": "BLT Video Meme",
+        "label": "video-meme-submission",
+        "title_prefix": "[Video Meme]",
+        "template": "video-meme-submission.yml",
+        "description": "Create a short video meme promoting or explaining OWASP BLT.",
+        "prize": "$10",
+        "deadline": "2026-05-01T00:00:00Z",
+        "deadline_display": "May 1, 2026",
+        "icon": "fa-solid fa-circle-play",
+    },
 ]
 
 # Backward-compatible aliases (used by helpers that pre-date multi-contest support)
