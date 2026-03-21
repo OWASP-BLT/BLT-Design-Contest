@@ -111,6 +111,23 @@ COMMENT_STRIP_IMAGE_RE = re.compile(r"!\[.*?\]\(.*?\)")
 COMMENT_STRIP_LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 MAX_COMMENT_LENGTH = 120
 
+# Regexes for extracting video IDs from YouTube and Vimeo URLs
+YOUTUBE_VIDEO_RE = re.compile(
+    r'(?:https?://)?(?:www\.)?'
+    r'(?:youtube\.com/(?:watch\?v=|embed/|v/)|youtu\.be/)([A-Za-z0-9_-]{11})',
+    re.IGNORECASE,
+)
+VIMEO_VIDEO_RE = re.compile(
+    r'(?:https?://)?(?:www\.)?vimeo\.com/(?:video/)?(\d+)',
+    re.IGNORECASE,
+)
+# GitHub user-attachment bare URL with no image file extension — typically a video upload
+GITHUB_VIDEO_ATTACHMENT_RE = re.compile(
+    r'^https://github\.com/user-attachments/assets/[0-9a-f-]{36}$'
+)
+VIMEO_API_TIMEOUT = 10  # seconds
+VIMEO_USER_AGENT = "python-urllib/build-showcase"
+
 
 def github_request(path: str) -> list | dict:
   """Perform a paginated GET against the GitHub REST API."""
@@ -256,7 +273,8 @@ def build_html(contests_data: list[dict], last_updated: str) -> str:
 
       body = issue.get("body", "") or ""
       fields = parse_issue_body(body)
-      preview_url = html.escape(extract_preview_url(fields, body))
+      raw_design_url = extract_design_url(fields)
+      preview_url = html.escape(extract_preview_url(fields, body, raw_design_url))
       issue_url = html.escape(issue.get("html_url", "#"))
 
       entry = {
@@ -328,14 +346,52 @@ def parse_issue_body(body: str) -> dict:
     return fields
 
 
-def extract_preview_url(fields: dict, body: str) -> str:
-    """Find the preview image URL from parsed fields or raw body."""
+def extract_youtube_thumbnail(url: str) -> str:
+    """Return a YouTube thumbnail URL for a given YouTube video URL, or ''."""
+    m = YOUTUBE_VIDEO_RE.search(url)
+    if not m:
+        return ""
+    video_id = m.group(1)
+    return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+
+
+def extract_vimeo_thumbnail(url: str) -> str:
+    """Return a Vimeo thumbnail URL via the oEmbed API, or '' on failure."""
+    m = VIMEO_VIDEO_RE.search(url)
+    if not m:
+        return ""
+    video_id = m.group(1)
+    oembed_url = (
+        f"https://vimeo.com/api/oembed.json?url=https://vimeo.com/{video_id}"
+    )
+    req = urllib.request.Request(
+        oembed_url, headers={"User-Agent": VIMEO_USER_AGENT}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=VIMEO_API_TIMEOUT) as resp:
+            data = json.loads(resp.read())
+            return data.get("thumbnail_url", "")
+    except Exception:
+        return ""
+
+
+def extract_video_thumbnail(url: str) -> str:
+    """Try YouTube then Vimeo to find a thumbnail for a video URL."""
+    return extract_youtube_thumbnail(url) or extract_vimeo_thumbnail(url)
+
+
+def extract_preview_url(fields: dict, body: str, design_url: str = "") -> str:
+    """Find the preview image URL from parsed fields or raw body.
+
+    When a user uploads a video file to a GitHub issue textarea, GitHub inserts
+    a bare URL (no markdown image syntax).  Such bare GitHub attachment URLs
+    point to video content that cannot be rendered by <img>, so we detect them
+    and fall back to extracting a thumbnail from the design_url instead.
+    """
     # Check known field keys (including legacy keys for backward compatibility)
     for key in ("preview_image_url", "preview_url", "preview_image"):
         val = fields.get(key, "").strip()
-        if val and val.startswith("http"):
-            return val
-        # Handle markdown image syntax: ![alt](url) or HTML <img src="url">
+        # Markdown image syntax: ![alt](url) — definitely an image
         if val:
             m = MARKDOWN_IMAGE_RE.search(val)
             if m:
@@ -343,6 +399,14 @@ def extract_preview_url(fields: dict, body: str) -> str:
             m = HTML_IMAGE_RE.search(val)
             if m:
                 return m.group(1)
+        if val and val.startswith("http"):
+            # A bare GitHub attachment URL without an image extension is likely
+            # a video upload; prefer a thumbnail extracted from the design URL.
+            if GITHUB_VIDEO_ATTACHMENT_RE.match(val) and design_url:
+                thumb = extract_video_thumbnail(design_url)
+                if thumb:
+                    return thumb
+            return val
 
     # Fallback: first markdown image in body  ![alt](url)
     m = MARKDOWN_IMAGE_RE.search(body or "")
@@ -359,6 +423,12 @@ def extract_preview_url(fields: dict, body: str) -> str:
                   re.IGNORECASE)
     if m:
         return m.group(1)
+
+    # Last resort: try to derive a thumbnail from the video design URL
+    if design_url:
+        thumb = extract_video_thumbnail(design_url)
+        if thumb:
+            return thumb
 
     return ""
 
@@ -406,8 +476,9 @@ def build_card(issue: dict, reactions: dict, last_comment: dict | None = None,
     fields = parse_issue_body(body)
 
     designer_name = html.escape(author_login)
-    preview_url = html.escape(extract_preview_url(fields, body))
-    design_url = html.escape(extract_design_url(fields))
+    raw_design_url = extract_design_url(fields)
+    preview_url = html.escape(extract_preview_url(fields, body, raw_design_url))
+    design_url = html.escape(raw_design_url)
     category = html.escape(extract_category(fields))
     description = extract_description(fields)
     comment_count = issue.get("comments", 0)
@@ -821,7 +892,8 @@ def build_html(contests_data: list[dict], last_updated: str) -> str:
 
             body = issue.get("body", "") or ""
             fields = parse_issue_body(body)
-            preview_url = html.escape(extract_preview_url(fields, body))
+            raw_design_url = extract_design_url(fields)
+            preview_url = html.escape(extract_preview_url(fields, body, raw_design_url))
             issue_url = html.escape(issue.get("html_url", "#"))
 
             recent_entries.append({
@@ -876,7 +948,8 @@ def build_html(contests_data: list[dict], last_updated: str) -> str:
 
                     body = issue.get("body", "") or ""
                     fields = parse_issue_body(body)
-                    preview_url = html.escape(extract_preview_url(fields, body))
+                    raw_design_url = extract_design_url(fields)
+                    preview_url = html.escape(extract_preview_url(fields, body, raw_design_url))
                     issue_url = html.escape(issue.get("html_url", "#"))
 
                     entry = {
@@ -1260,7 +1333,8 @@ def build_show_all_entries_html(contests_data: list[dict], last_updated: str) ->
 
             body = issue.get("body", "") or ""
             fields = parse_issue_body(body)
-            preview_url = html.escape(extract_preview_url(fields, body))
+            raw_design_url = extract_design_url(fields)
+            preview_url = html.escape(extract_preview_url(fields, body, raw_design_url))
             issue_url = html.escape(issue.get("html_url", "#"))
 
             entries.append({
@@ -1610,7 +1684,8 @@ def build_winner_showcase(winner_issues: list, title_prefix: str) -> str:
 
         body_text = issue.get("body", "") or ""
         fields = parse_issue_body(body_text)
-        preview_url = html.escape(extract_preview_url(fields, body_text))
+        raw_design_url = extract_design_url(fields)
+        preview_url = html.escape(extract_preview_url(fields, body_text, raw_design_url))
 
         avatar_img = (
             f'<img src="{author_avatar}" alt="{author_login}\'s avatar" '
