@@ -110,6 +110,10 @@ HTML_IMAGE_RE = re.compile(r'<img\s[^>]*src="(https?://[^"]+)"', re.IGNORECASE)
 COMMENT_STRIP_IMAGE_RE = re.compile(r"!\[.*?\]\(.*?\)")
 COMMENT_STRIP_LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 MAX_COMMENT_LENGTH = 120
+# Matches the 11-character video ID from YouTube watch, short, shorts, or embed URLs
+YOUTUBE_VIDEO_ID_RE = re.compile(
+    r"(?:youtube\.com/(?:watch\?(?:.*?&)?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})"
+)
 
 
 def github_request(path: str) -> list | dict:
@@ -328,12 +332,24 @@ def parse_issue_body(body: str) -> dict:
     return fields
 
 
+def youtube_thumbnail_url(url: str) -> str:
+    """Return the HQ YouTube thumbnail URL for a YouTube video link, or '' if not a YouTube URL."""
+    m = YOUTUBE_VIDEO_ID_RE.search(url)
+    if m:
+        return f"https://img.youtube.com/vi/{m.group(1)}/hqdefault.jpg"
+    return ""
+
+
 def extract_preview_url(fields: dict, body: str) -> str:
     """Find the preview image URL from parsed fields or raw body."""
     # Check known field keys (including legacy keys for backward compatibility)
     for key in ("preview_image_url", "preview_url", "preview_image"):
         val = fields.get(key, "").strip()
         if val and val.startswith("http"):
+            # If the value is a YouTube URL, convert it to a thumbnail URL
+            yt = youtube_thumbnail_url(val)
+            if yt:
+                return yt
             return val
         # Handle markdown image syntax: ![alt](url) or HTML <img src="url">
         if val:
@@ -359,6 +375,19 @@ def extract_preview_url(fields: dict, body: str) -> str:
                   re.IGNORECASE)
     if m:
         return m.group(1)
+
+    # Fallback: derive thumbnail from design_url if it is a YouTube link
+    for key in ("design_prototype_link", "design_url", "prototype_link"):
+        design_val = fields.get(key, "").strip()
+        if design_val:
+            yt = youtube_thumbnail_url(design_val)
+            if yt:
+                return yt
+
+    # Fallback: any YouTube URL anywhere in the body
+    m = YOUTUBE_VIDEO_ID_RE.search(body or "")
+    if m:
+        return f"https://img.youtube.com/vi/{m.group(1)}/hqdefault.jpg"
 
     return ""
 
@@ -496,13 +525,28 @@ def build_card(issue: dict, reactions: dict, last_comment: dict | None = None,
         )
 
     # Preview image
+    # When design_url is a YouTube link and the preview fails (e.g. GitHub video asset),
+    # fall back to the YouTube thumbnail instead of a generic placeholder icon.
+    yt_fallback = youtube_thumbnail_url(html.unescape(design_url)) if design_url else ""
     if preview_url:
+        if yt_fallback and html.unescape(preview_url) != yt_fallback:
+            onerror_attr = (
+                f"onerror=\"this.src='{html.escape(yt_fallback)}'; this.onerror=null;\""
+            )
+        else:
+            onerror_attr = (
+                "onerror=\"this.style.display='none';"
+                "this.parentElement.classList.add('flex','items-center','justify-center');"
+                "this.parentElement.innerHTML+='<i class=\\\"fa-solid fa-circle-play text-4xl"
+                " text-gray-400\\\" aria-hidden=\\\"true\\\"></i>';\""
+            )
         preview_block = (
             f'<a href="{issue_url}" target="_blank" rel="noopener" '
             f'   class="block overflow-hidden aspect-square bg-gray-100 dark:bg-gray-700">'
             f'  <img src="{preview_url}" alt="{title} preview" loading="lazy" '
             f'       class="w-full h-full object-cover transition-transform duration-300 '
-            f'              group-hover:scale-105" />'
+            f'              group-hover:scale-105" '
+            f'       {onerror_attr} />'
             f'</a>'
         )
     else:
@@ -822,6 +866,7 @@ def build_html(contests_data: list[dict], last_updated: str) -> str:
             body = issue.get("body", "") or ""
             fields = parse_issue_body(body)
             preview_url = html.escape(extract_preview_url(fields, body))
+            design_url_raw = extract_design_url(fields)
             issue_url = html.escape(issue.get("html_url", "#"))
 
             recent_entries.append({
@@ -830,6 +875,7 @@ def build_html(contests_data: list[dict], last_updated: str) -> str:
                 "title": html.escape(raw_title or "Untitled submission"),
                 "issue_url": issue_url,
                 "preview_url": preview_url,
+                "yt_thumbnail": html.escape(youtube_thumbnail_url(design_url_raw)),
                 "submitted_iso": html.escape(created_at),
                 "submitted_fallback": html.escape(created_at[:10]),
                 "submitted_dt": submitted_dt,
@@ -842,12 +888,25 @@ def build_html(contests_data: list[dict], last_updated: str) -> str:
         recent_cards_html = ""
         for item in latest_three:
             if item["preview_url"]:
+                yt = item.get("yt_thumbnail", "")
+                if yt and item["preview_url"] != yt:
+                    onerror_attr = (
+                        f"onerror=\"this.src='{yt}'; this.onerror=null;\""
+                    )
+                else:
+                    onerror_attr = (
+                        "onerror=\"this.style.display='none';"
+                        "this.parentElement.classList.add('flex','items-center','justify-center');"
+                        "this.parentElement.innerHTML+='<i class=\\\"fa-solid fa-circle-play text-4xl"
+                        " text-gray-400\\\" aria-hidden=\\\"true\\\"></i>';\""
+                    )
                 preview_block = (
                     f'<a href="{item["issue_url"]}" target="_blank" rel="noopener" '
                     f'   class="block overflow-hidden aspect-video bg-gray-100 dark:bg-gray-700">'
                     f'  <img src="{item["preview_url"]}" alt="{item["title"]} preview" loading="lazy" '
                     f'       class="w-full h-full object-cover transition-transform duration-300 '
-                    f'              group-hover:scale-105" />'
+                    f'              group-hover:scale-105" '
+                    f'       {onerror_attr} />'
                     f'</a>'
                 )
             else:
@@ -1261,6 +1320,7 @@ def build_show_all_entries_html(contests_data: list[dict], last_updated: str) ->
             body = issue.get("body", "") or ""
             fields = parse_issue_body(body)
             preview_url = html.escape(extract_preview_url(fields, body))
+            design_url_raw = extract_design_url(fields)
             issue_url = html.escape(issue.get("html_url", "#"))
 
             entries.append({
@@ -1270,6 +1330,7 @@ def build_show_all_entries_html(contests_data: list[dict], last_updated: str) ->
                 "title": html.escape(raw_title or "Untitled submission"),
                 "issue_url": issue_url,
                 "preview_url": preview_url,
+                "yt_thumbnail": html.escape(youtube_thumbnail_url(design_url_raw)),
                 "submitted_iso": html.escape(created_at),
                 "submitted_fallback": html.escape(created_at[:10]),
                 "submitted_dt": submitted_dt,
@@ -1281,12 +1342,26 @@ def build_show_all_entries_html(contests_data: list[dict], last_updated: str) ->
         cards = []
         for item in entries:
             if item["preview_url"]:
+                yt = item.get("yt_thumbnail", "")
+                if yt and item["preview_url"] != yt:
+                    # If the preview image fails (e.g. a GitHub video asset), fall back to YouTube thumbnail
+                    onerror_attr = (
+                        f"onerror=\"this.src='{yt}'; this.onerror=null;\""
+                    )
+                else:
+                    onerror_attr = (
+                        "onerror=\"this.style.display='none';"
+                        "this.parentElement.classList.add('flex','items-center','justify-center');"
+                        "this.parentElement.innerHTML+='<i class=\\\"fa-solid fa-circle-play"
+                        " text-3xl text-gray-400\\\" aria-hidden=\\\"true\\\"></i>';\""
+                    )
                 preview_block = (
                     f'<a href="{item["issue_url"]}" target="_blank" rel="noopener" '
                     f'   class="block overflow-hidden aspect-square bg-gray-100 dark:bg-gray-700">'
                     f'  <img src="{item["preview_url"]}" alt="{item["title"]} preview" loading="lazy" '
                     f'       class="w-full h-full object-cover transition-transform duration-300 '
-                    f'              group-hover:scale-105" />'
+                    f'              group-hover:scale-105" '
+                    f'       {onerror_attr} />'
                     f'</a>'
                 )
             else:
